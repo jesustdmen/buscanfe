@@ -1,0 +1,22 @@
+title = "nfe-registro gitleaks"
+
+[extend]
+useDefault = true
+
+# Bloqueia certificados/segredos commitados por engano.
+[[rules]]
+id = "pkcs12-pfx-file"
+description = "Arquivo PKCS12/PFX/P12 no repositório"
+path = '''\.(pfx|p12)$'''
+
+[[rules]]
+id = "rails-master-key"
+description = "Rails master.key / credentials key"
+path = '''(config/master\.key|config/credentials/.*\.key)$'''
+
+[allowlist]
+description = "exemplos e documentação não são segredos reais"
+paths = [
+  '''\.env\.example$''',
+  '''_docs/''',
+]
