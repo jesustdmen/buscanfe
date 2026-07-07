@@ -1,0 +1,38 @@
+<% content_for :title, "Empresas & Certificados" %>
+<div style="display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:22px;">
+  <div style="color:var(--ink-2); font-size:13.5px; max-width:560px;">Empresas habilitadas com certificado digital A1. Rótulo, CNPJ e razão social são derivados do próprio certificado — apenas o rótulo é digitado.</div>
+  <%= link_to new_certificado_path, class: "btn btn-primary", style: "flex-shrink:0;" do %><span style="font-size:15px;">+</span> Adicionar certificado<% end %>
+</div>
+<div class="panel" style="overflow:hidden;">
+  <table class="tbl">
+    <thead><tr><th>Empresa</th><th>CNPJ</th><th>Validade</th><th>Fingerprint</th><th></th></tr></thead>
+    <tbody>
+      <% @certificados.each do |c| %>
+        <% dias = ((c.validade.to_date - Date.current).to_i if c.validade) %>
+        <% cls, txt = if dias.nil? then ["st-norec","—"] elsif dias <= 15 then ["st-error","vence em #{dias} dias"] elsif dias <= 45 then ["st-pending","vence em #{dias} dias"] else ["st-downloaded","válido"] end %>
+        <tr>
+          <td>
+            <div style="display:flex; align-items:center; gap:11px;">
+              <div style="width:9px;height:9px;border-radius:2px;background:var(--accent);"></div>
+              <div><div style="font-weight:600; font-size:13.5px;"><%= c.rotulo %></div><div style="font-size:12px; color:var(--ink-2);"><%= c.razao_social %></div></div>
+            </div>
+          </td>
+          <td class="mono" style="font-size:12.5px; color:var(--ink-2); white-space:nowrap;"><%= c.cnpj %></td>
+          <td>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <span class="pill <%= cls %>"><span class="dot"></span><%= txt %></span>
+              <span class="mono" style="font-size:11px; color:var(--ink-3);"><%= c.validade&.to_date&.iso8601 %></span>
+            </div>
+          </td>
+          <td class="mono" style="font-size:11.5px; color:var(--ink-3); white-space:nowrap;"><%= c.fingerprint&.first(16) %>…</td>
+          <td style="text-align:right; white-space:nowrap;">
+            <%= link_to "Novo lote", new_lote_path(certificado_id: c.id), class: "btn btn-ghost", style: "padding:7px 12px; font-size:12px;" %>
+          </td>
+        </tr>
+      <% end %>
+      <% if @certificados.empty? %>
+        <tr><td colspan="5" style="color:var(--ink-3); text-align:center; padding:24px;">Nenhum certificado. <%= link_to "Adicionar", new_certificado_path %>.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

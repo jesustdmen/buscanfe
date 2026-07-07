@@ -1,0 +1,30 @@
+# ===== Segredos e dados locais — NUNCA versionar =====
+.env
+.env.*
+!.env.example
+config/master.key
+config/credentials/*.key
+*.pfx
+*.p12
+
+# ===== Dados do app: XMLs fiscais baixados (NÃO commitar) =====
+/storage/*
+!/storage/.keep
+
+# ===== Runtime do Rails =====
+/log/*
+!/log/.keep
+/tmp/*
+!/tmp/.keep
+/tmp/pids/*
+!/tmp/pids/.keep
+/db/*.sqlite3
+/db/*.sqlite3-*
+
+# ===== Bundler / build local =====
+/.bundle
+/vendor/bundle
+
+# ===== SO / editor =====
+.DS_Store
+Thumbs.db

@@ -1,0 +1,28 @@
+<% content_for :title, "Download" %>
+<h1>Download por certificado</h1>
+
+<%= form_with url: download_path, method: :get do |f| %>
+  <p>
+    <%= label_tag :certificado_id, "Certificado (por rótulo)" %><br>
+    <%= select_tag :certificado_id,
+          options_from_collection_for_select(@certificados, :id, :rotulo, @selected&.id),
+          include_blank: "— escolha —", onchange: "this.form.submit()" %>
+  </p>
+<% end %>
+
+<% if @selected %>
+  <fieldset style="margin-top:12px">
+    <legend>Selecionado: <%= @selected.rotulo %></legend>
+    <p><%= @selected.razao_social %> — CNPJ <%= @selected.cnpj %> · validade <%= @selected.validade&.to_date&.iso8601 %></p>
+
+    <%= form_with url: download_confirmar_path, method: :post do |f| %>
+      <%= hidden_field_tag :certificado_id, @selected.id %>
+      <%= f.submit "Autorizar lote de Confirmação (exige step-up)" %>
+    <% end %>
+    <p style="color:#555">A execução do lote (manifestação + download) é a Fase 4 parte 2. Aqui só o registro seguro + step-up.</p>
+  </fieldset>
+<% end %>
+
+<% if @certificados.empty? %>
+  <p>Nenhum certificado cadastrado. <%= link_to "Cadastrar", new_certificado_path %>.</p>
+<% end %>

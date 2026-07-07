@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Sobe a stack completa (db + web + worker) em um comando. UI: http://localhost:3000
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+if [ ! -f .env ]; then
+  echo "ERRO: crie um .env na raiz com MASTER_PASSPHRASE (modelo em web/.env.example)." >&2
+  exit 1
+fi
+
+if ! grep -q '^MASTER_PASSPHRASE=..*' .env; then
+  echo "ERRO: defina MASTER_PASSPHRASE no .env (é a chave do cofre; precisa existir antes do 1º request)." >&2
+  exit 1
+fi
+
+echo "Subindo db + web + worker…  (UI em http://localhost:3000, primeira subida cai na tela de setup)"
+exec docker compose up --build "$@"

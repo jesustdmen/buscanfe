@@ -1,0 +1,18 @@
+# PostgreSQL. Config por DATABASE_URL (ver docker-compose).
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  url: <%= ENV.fetch("DATABASE_URL", "postgres://postgres:postgres@db:5432") %>
+
+development:
+  <<: *default
+  database: nfe_registro_development
+
+test:
+  <<: *default
+  database: nfe_registro_test
+
+production:
+  <<: *default
+  database: nfe_registro_production

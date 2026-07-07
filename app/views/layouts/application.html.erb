@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html data-theme="<%= cookies[:theme] == "dark" ? "dark" : "light" %>" data-density="<%= cookies[:density] == "compact" ? "compact" : "comfortable" %>">
+  <head>
+    <title><%= content_for(:title) || "Registro NF-e" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <%= stylesheet_link_tag "application" %>
+    <%= javascript_include_tag "/js/nfe.js", defer: true %>
+  </head>
+  <body>
+    <% if user_signed_in? %>
+      <div style="display:flex; min-height:100vh;">
+        <aside style="width:236px; flex-shrink:0; background:var(--panel); border-right:1px solid var(--line); display:flex; flex-direction:column; position:sticky; top:0; height:100vh;">
+          <div style="padding:20px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:11px;">
+            <div style="width:26px; height:26px; border:1.5px solid var(--ink); display:flex; align-items:center; justify-content:center; transform:rotate(45deg);"><div style="width:8px;height:8px;background:var(--ink);"></div></div>
+            <div><div style="font-weight:600; font-size:13px;">Registro NF-e</div><div style="font-size:10.5px; color:var(--ink-3); letter-spacing:.1em; text-transform:uppercase;">Console Fiscal</div></div>
+          </div>
+          <nav style="padding:14px 12px; display:flex; flex-direction:column; gap:3px; flex:1;">
+            <div style="font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); padding:8px 12px 6px;">Operação</div>
+            <% nav = [["▤","Certificados",certificados_path],["＋","Novo lote",new_lote_path],["≡","Auditoria",audits_path]] %>
+            <% nav.each do |icon,label,path| %>
+              <% active = request.path.start_with?(path) || (path == certificados_path && controller_name == "certificados") %>
+              <%= link_to path, style: "display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:8px; text-decoration:none; font-size:13px; font-weight:#{active ? 600 : 450}; color:#{active ? 'var(--ink)' : 'var(--ink-2)'}; background:#{active ? 'var(--panel-3)' : 'transparent'};" do %>
+                <span class="mono" style="width:16px; text-align:center; opacity:.85;"><%= icon %></span><span style="flex:1;"><%= label %></span>
+              <% end %>
+            <% end %>
+          </nav>
+          <div style="padding:14px; border-top:1px solid var(--line);">
+            <div style="display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:8px; background:var(--panel-2);">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--graphite);color:var(--graphite-ink);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;"><%= current_user.email[0,2].upcase %></div>
+              <div style="flex:1; min-width:0;"><div style="font-size:11px; color:var(--ink-2); overflow:hidden; text-overflow:ellipsis;"><%= current_user.email %></div></div>
+              <%= button_to "⏻", destroy_user_session_path, method: :delete, title: "Sair", form: { style: "display:inline" }, style: "background:transparent;border:none;color:var(--ink-3);cursor:pointer;font-size:15px;" %>
+            </div>
+          </div>
+        </aside>
+
+        <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+          <header style="height:60px; flex-shrink:0; border-bottom:1px solid var(--line); background:var(--panel); display:flex; align-items:center; gap:16px; padding:0 26px; position:sticky; top:0; z-index:5;">
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:11px; color:var(--ink-3);"><%= content_for(:crumb) || "Operação" %></div>
+              <div style="font-size:15px; font-weight:600; margin-top:1px;"><%= content_for(:title) || "Console" %></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:9.5px; letter-spacing:.11em; text-transform:uppercase; color:var(--ink-3);">Ambiente</span>
+              <div class="seg">
+                <%= button_to environment_path(ambiente: "producao"), class: (current_ambiente == "producao" ? "active" : ""), form: { style: "margin:0" } do %><span style="width:6px;height:6px;border-radius:50%;background:var(--ok);margin-right:6px;display:inline-block;"></span>Produção<% end %>
+                <%= button_to environment_path(ambiente: "homologacao"), class: (current_ambiente == "homologacao" ? "active" : ""), form: { style: "margin:0" } do %><span style="width:6px;height:6px;border-radius:50%;background:var(--warn);margin-right:6px;display:inline-block;"></span>Homolog.<% end %>
+              </div>
+              <span style="font-size:9.5px; letter-spacing:.11em; text-transform:uppercase; color:var(--ink-3);">Tema</span>
+              <div class="seg" data-toggle="theme">
+                <button type="button" data-val="light">☾ Claro</button><button type="button" data-val="dark">☀ Escuro</button>
+              </div>
+              <div class="seg" data-toggle="density">
+                <button type="button" data-val="comfortable">Conforto</button><button type="button" data-val="compact">Compacto</button>
+              </div>
+            </div>
+          </header>
+          <main style="flex:1; overflow:auto; padding:28px 34px 60px;">
+            <div style="max-width:1080px; margin:0 auto;">
+              <% if notice %><div class="flash notice"><%= notice %></div><% end %>
+              <% if alert %><div class="flash alert"><%= alert %></div><% end %>
+              <%= yield %>
+            </div>
+          </main>
+        </div>
+      </div>
+      <div id="toast-root"></div>
+    <% else %>
+      <%= yield %>
+    <% end %>
+  </body>
+</html>

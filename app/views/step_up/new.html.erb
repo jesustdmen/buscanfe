@@ -1,0 +1,12 @@
+<% content_for :title, "Step-up" %>
+<h1>Reconfirmar passphrase-mestra</h1>
+<p>Ação sensível. Reentre a passphrase-mestra para prosseguir (válida por 10 minutos).</p>
+
+<%= form_with url: step_up_path, method: :post do |f| %>
+  <%= hidden_field_tag :return_to, @return_to %>
+  <p>
+    <%= label_tag :passphrase, "Passphrase-mestra" %><br>
+    <%= password_field_tag :passphrase, nil, required: true, autocomplete: "off", autofocus: true %>
+  </p>
+  <p><%= f.submit "Confirmar" %></p>
+<% end %>

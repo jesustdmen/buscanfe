@@ -1,0 +1,33 @@
+<% content_for :title, "Painel" %>
+<h1>Painel</h1>
+
+<p>
+  Cifragem em repouso:
+  <% if @encryption_ready %>
+    <strong style="color:green">ATIVA</strong> (chave-mestra derivada da passphrase em memória)
+  <% else %>
+    <strong style="color:#b00">INATIVA</strong> — suba o app com <code>MASTER_PASSPHRASE</code>
+  <% end %>
+</p>
+
+<h2>Certificados (<%= @certificados.size %>)</h2>
+<ul>
+  <% @certificados.each do |c| %>
+    <li><%= c.rotulo %> — <%= c.razao_social %> (<%= c.cnpj %>) · validade <%= c.validade&.to_date&.iso8601 %>
+      <% if c.expirado? %><span style="color:#b00">[EXPIRADO]</span><% end %></li>
+  <% end %>
+</ul>
+<p><%= link_to "Cadastrar certificado", new_certificado_path %> · <%= link_to "Tela de download", download_path %></p>
+
+<h2>Auditoria recente</h2>
+<table border="1" cellpadding="4" cellspacing="0">
+  <tr><th>quando</th><th>ação</th><th>usuário</th><th>detalhe</th></tr>
+  <% @recent_audits.each do |a| %>
+    <tr>
+      <td><%= a.created_at.strftime("%Y-%m-%d %H:%M") %></td>
+      <td><%= a.action %></td>
+      <td><%= a.user&.email %></td>
+      <td><%= a.detail %></td>
+    </tr>
+  <% end %>
+</table>

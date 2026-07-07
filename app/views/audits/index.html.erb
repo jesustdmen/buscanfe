@@ -1,0 +1,22 @@
+<% content_for :title, "Trilha de auditoria" %>
+<div style="color:var(--ink-2); font-size:13.5px; margin-bottom:20px; max-width:640px;">Registro imutável e append-only de toda escrita fiscal. Cada Confirmação da Operação grava quem autorizou, a empresa, o volume de notas e o protocolo retornado pela SEFAZ.</div>
+<div class="panel" style="overflow:hidden;">
+  <table class="tbl">
+    <thead><tr><th>Quando</th><th>Quem</th><th>Ação</th><th>Empresa</th><th>Chave/Detalhe</th><th>nProt</th></tr></thead>
+    <tbody>
+      <% meta = { "lote.criado"=>["Lote criado","st-pending"], "lote.confirmacao_autorizada"=>["Confirmação autorizada","st-confirmed"], "confirmacao.evento"=>["Confirmação","st-confirmed"], "confirmacao.rejeitada"=>["Confirmação rejeitada","st-error"], "certificado.cadastro"=>["Cadastro de certificado","st-norec"], "certificado.remocao"=>["Remoção de certificado","st-norec"], "step_up.falha"=>["Step-up falhou","st-error"], "step_up.ok"=>["Step-up","st-confirmed"] } %>
+      <% @audits.each do |a| %>
+        <% m = meta[a.action] || [a.action, "st-pending"] %>
+        <tr>
+          <td class="mono" style="font-size:11.5px; color:var(--ink-2); white-space:nowrap;"><%= a.created_at.strftime("%Y-%m-%d %H:%M") %></td>
+          <td style="font-size:12.5px;"><%= a.user&.email || "—" %></td>
+          <td><span class="pill <%= m[1] %>"><%= m[0] %></span></td>
+          <td style="font-size:12.5px;"><% if a.certificado %><span style="font-weight:500;"><%= a.certificado.rotulo %></span> <span class="mono" style="color:var(--ink-3); font-size:11.5px;"><%= a.certificado.cnpj %></span><% else %>—<% end %></td>
+          <td class="mono" style="font-size:11px; color:var(--ink-3); word-break:break-all; max-width:280px;"><%= a.chave || a.detail %> <% if a.c_stat %><span style="color:var(--st-confirmed-fg); font-weight:600;">cStat <%= a.c_stat %></span><% end %></td>
+          <td class="mono" style="font-size:11.5px; color:var(--ink-3); white-space:nowrap;"><%= a.n_prot || "—" %></td>
+        </tr>
+      <% end %>
+      <% if @audits.empty? %><tr><td colspan="6" style="text-align:center; color:var(--ink-3); padding:24px;">Sem eventos ainda.</td></tr><% end %>
+    </tbody>
+  </table>
+</div>

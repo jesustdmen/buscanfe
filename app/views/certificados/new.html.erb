@@ -1,0 +1,43 @@
+<% content_for :title, "Cadastrar certificado" %>
+<% content_for :crumb, "Certificados" %>
+<div style="max-width:620px;">
+  <%= form_with url: certificados_path, method: :post, multipart: true, id: "cert-form", data: { preview_url: preview_certificados_path } do |f| %>
+    <div class="panel" style="overflow:hidden;">
+      <div style="padding:20px 24px; border-bottom:1px solid var(--line);">
+        <div style="font-weight:600; font-size:15px;">Dados do certificado A1</div>
+        <div style="font-size:12.5px; color:var(--ink-2); margin-top:3px;">O arquivo é aberto no servidor só para leitura dos metadados; a senha e o .pfx ficam cifrados em repouso.</div>
+      </div>
+      <div style="padding:24px;">
+        <% if @error %><div class="flash alert"><%= @error %></div><% end %>
+        <label class="label">Rótulo <span style="color:var(--ink-3); font-weight:400;">— único campo digitado</span></label>
+        <%= text_field_tag "certificado[rotulo]", @certificado&.rotulo, placeholder: "ex.: Filial BA", required: true, class: "field", style: "margin-bottom:18px;" %>
+
+        <label class="label">Arquivo .pfx / .p12</label>
+        <div id="cert-drop" style="border:1.5px dashed var(--field-line); border-radius:9px; padding:16px; display:flex; align-items:center; gap:13px; cursor:pointer; background:var(--panel-2); margin-bottom:18px;">
+          <div class="mono" style="width:34px; height:34px; border-radius:8px; background:var(--panel-3); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--ink-2);">PFX</div>
+          <div style="flex:1;"><div id="cert-file-label" style="font-size:13px; font-weight:500;">Clique para selecionar o certificado</div><div style="font-size:11.5px; color:var(--ink-3);">.pfx ou .p12</div></div>
+        </div>
+        <%= file_field_tag "certificado[arquivo]", accept: ".pfx,.p12", required: true, id: "cert-file", style: "display:none;" %>
+
+        <label class="label">Senha do certificado</label>
+        <%= password_field_tag "certificado[senha]", nil, required: true, autocomplete: "off", class: "field", style: "margin-bottom:22px;" %>
+
+        <button type="button" class="btn btn-primary" style="width:100%; padding:12px;" data-action="cert-preview">Ler e validar certificado</button>
+      </div>
+
+      <div id="cert-result" style="display:none; border-top:1px solid var(--line); background:var(--panel-2); padding:22px 24px;">
+        <div style="display:flex; align-items:center; gap:9px; margin-bottom:16px;"><span style="width:18px;height:18px;border-radius:50%;background:var(--ok);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;">✓</span><span style="font-weight:600; font-size:13.5px;">Lido do certificado — confira antes de salvar</span></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); border:1px solid var(--line); border-radius:9px; overflow:hidden;">
+          <div style="background:var(--panel); padding:12px 15px;"><div style="font-size:10.5px; text-transform:uppercase; color:var(--ink-3);">CNPJ</div><div class="mono" id="r-cnpj" style="font-size:13px; margin-top:3px;"></div></div>
+          <div style="background:var(--panel); padding:12px 15px;"><div style="font-size:10.5px; text-transform:uppercase; color:var(--ink-3);">Validade</div><div class="mono" id="r-validade" style="font-size:13px; margin-top:3px;"></div></div>
+          <div style="background:var(--panel); padding:12px 15px; grid-column:1/-1;"><div style="font-size:10.5px; text-transform:uppercase; color:var(--ink-3);">Razão social</div><div id="r-razao" style="font-size:13px; margin-top:3px; font-weight:500;"></div></div>
+          <div style="background:var(--panel); padding:12px 15px; grid-column:1/-1;"><div style="font-size:10.5px; text-transform:uppercase; color:var(--ink-3);">Fingerprint SHA-256</div><div class="mono" id="r-fp" style="font-size:11.5px; margin-top:3px; color:var(--ink-2); word-break:break-all;"></div></div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:18px;">
+          <%= f.submit "Confirmar e salvar", class: "btn btn-primary", style: "flex:1; padding:12px;" %>
+          <%= link_to "Cancelar", certificados_path, class: "btn btn-ghost", style: "padding:12px 18px;" %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

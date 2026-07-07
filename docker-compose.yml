@@ -1,0 +1,53 @@
+# Console NF-e — stack completa em um comando: db + web + worker.
+# `docker compose up` (ou os atalhos Iniciar/Parar). UI em http://localhost:3000
+name: nfe-registro
+
+x-app: &app
+  build:
+    context: .
+    dockerfile: Dockerfile.dev
+  image: nfe-registro:dev
+  environment:
+    RAILS_ENV: development
+    DATABASE_URL: postgres://postgres:postgres@db:5432
+    MASTER_PASSPHRASE: ${MASTER_PASSPHRASE:-}      # chave do cofre — vem do .env (local)
+    MASTER_KEY_SALT: ${MASTER_KEY_SALT:-nfe-registro/v1}
+  volumes:
+    - .:/rails                                      # código + storage (XMLs baixados)
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # Web (Puma) — limpa PID antigo, roda db:prepare (idempotente) e sobe o servidor.
+  web:
+    <<: *app
+    command: bash -lc "rm -f tmp/pids/server.pid && bundle exec rails db:prepare && bundle exec rails server -b 0.0.0.0 -p 3000"
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Worker GoodJob DEDICADO — consome a fila. Reiniciar o web não interrompe o lote.
+  worker:
+    <<: *app
+    command: >-
+      bash -lc "until bundle exec rails runner 'exit(ActiveRecord::Base.connection.table_exists?(:good_jobs) ? 0 : 1)' 2>/dev/null; do echo 'aguardando migracao do banco'; sleep 2; done; bundle exec good_job start"
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

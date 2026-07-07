@@ -1,0 +1,124 @@
+<% content_for :title, "Relatório do lote ##{@lote.id}" %>
+<% content_for :crumb, "Novo lote" %>
+<% prod = current_ambiente == "producao" %>
+<% processing = %w[confirming downloading].include?(@lote.status) %>
+<% pendentes = @lote.chave_items.a_confirmar.count %>
+<% baixadas = @lote.chave_items.downloaded.to_a %>
+<% pct = @resumo[:total].zero? ? 0 : ((@resumo[:downloaded].to_f / @resumo[:total]) * 100).round %>
+
+<div <%= "data-autorefresh=4" if processing %>>
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px; flex-wrap:wrap;">
+    <div class="mono" style="font-size:13px; color:var(--ink-2); background:var(--panel-2); border:1px solid var(--line); border-radius:7px; padding:5px 10px;">Lote #<%= @lote.id %></div>
+    <div style="font-size:14px;"><strong><%= @lote.certificado.rotulo %></strong> <span class="mono" style="color:var(--ink-2); font-size:12.5px;"><%= @lote.cnpj %></span></div>
+    <span class="pill <%= processing ? 'st-confirmed' : (@lote.status == 'done' ? 'st-downloaded' : 'st-pending') %>"><span class="dot"></span><%= processing ? 'processando' : @lote.status %></span>
+    <span class="pill <%= prod ? 'st-error' : 'st-pending' %>"><span class="dot"></span><%= prod ? 'PRODUÇÃO' : 'HOMOLOGAÇÃO (ensaio)' %></span>
+    <div style="margin-left:auto; display:flex; gap:10px;">
+      <%= button_to "↻ Baixar (read-only)", baixar_lote_path(@lote), method: :post, class: "btn btn-soft", form: { style: "margin:0" }, style: "padding:9px 15px; font-size:12.5px;" %>
+      <% if pendentes.positive? %>
+        <button type="button" class="btn <%= prod ? 'btn-danger' : 'btn-primary' %>" style="padding:9px 15px; font-size:12.5px;" data-action="open-modal">Confirmar e baixar <%= pendentes %> notas</button>
+      <% end %>
+    </div>
+  </div>
+
+  <% if @rejeitadas.present? %>
+    <details style="margin-bottom:14px;"><summary style="cursor:pointer; color:var(--ink-2); font-size:12.5px;"><%= @rejeitadas.size %> rejeitada(s) na ingestão</summary>
+      <div style="font-size:12px; color:var(--ink-3); margin-top:6px;"><% @rejeitadas.each do |r| %><div class="mono"><%= (r["chave"]||r[:chave]) %> — <%= (r["motivo"]||r[:motivo]) %></div><% end %></div>
+    </details>
+  <% end %>
+
+  <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px;">
+    <% [["Total",@resumo[:total],"var(--ink)"],["Confirmadas",@resumo[:confirmed],"var(--st-confirmed-fg)"],["Baixadas",@resumo[:downloaded],"var(--st-downloaded-fg)"],["Falhas",@resumo[:erros], @resumo[:erros].positive? ? "var(--st-error-fg)" : "var(--ink-3)"]].each do |lbl,val,col| %>
+      <div class="panel" style="padding:16px 18px;"><div class="mono" style="font-size:26px; font-weight:600; color:<%= col %>;"><%= val %></div><div style="font-size:11px; text-transform:uppercase; color:var(--ink-3);"><%= lbl %></div></div>
+    <% end %>
+  </div>
+
+  <div class="panel" style="padding:15px 18px; margin-bottom:18px;">
+    <div style="display:flex; justify-content:space-between; margin-bottom:9px;">
+      <div style="font-size:12.5px; color:var(--ink-2);"><%= processing ? "Processando em segundo plano — download serializado" : (@lote.status == "done" ? "Lote concluído" : "Aguardando ação") %></div>
+      <div class="mono" style="font-size:12.5px; font-weight:600;"><%= pct %>%</div>
+    </div>
+    <div style="height:8px; border-radius:5px; background:var(--panel-3); overflow:hidden;">
+      <div style="height:100%; width:<%= pct %>%; border-radius:5px; background:<%= processing ? 'var(--accent)' : 'var(--ok)' %>; transition:width .4s ease;"></div>
+    </div>
+  </div>
+
+  <%= form_with url: download_zip_lote_path(@lote), method: :get, id: "zip-form", local: true do %>
+    <% if baixadas.any? %>
+      <div class="panel" style="display:flex; align-items:center; gap:14px; padding:11px 16px; margin-bottom:14px;">
+        <input type="checkbox" data-select-all style="width:16px; height:16px; cursor:pointer;">
+        <span style="font-size:12.5px; font-weight:500;">Selecionar todas as disponíveis <span style="color:var(--ink-3); font-weight:400;">(<%= baixadas.size %> baixadas)</span></span>
+        <div style="margin-left:auto; display:flex; align-items:center; gap:12px;">
+          <span class="mono" style="font-size:12px; color:var(--ink-2);"><span data-selected-count>0</span> selecionada(s)</span>
+          <button type="submit" class="btn btn-primary" style="padding:9px 15px; font-size:12.5px;" data-zip-submit disabled>↓ Baixar XML</button>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="panel" style="overflow:hidden;">
+      <table class="tbl">
+        <thead><tr><th style="width:20px;"></th><th>Chave de acesso</th><th>Estado</th><th>cStat</th><th>nProt</th><th style="text-align:right;">XML</th></tr></thead>
+        <tbody>
+          <% @items.each do |i| %>
+            <% meta = { "pending"=>["Pendente","st-pending"], "confirmed"=>["Confirmada","st-confirmed"], "downloaded"=>["Baixada","st-downloaded"], "error"=>["Erro","st-error"], "nao_recuperavel"=>["Não recuperável","st-norec"] }[i.status] %>
+            <% code = i.status == "downloaded" || i.status == "error" || i.status == "nao_recuperavel" ? i.c_stat_download : (i.status == "confirmed" ? i.c_stat_evento : "—") %>
+            <tr>
+              <td>
+                <% if i.status == "downloaded" %>
+                  <input type="checkbox" name="chaves[]" value="<%= i.chave %>" data-row-check style="width:16px; height:16px; cursor:pointer;">
+                <% else %><span style="display:inline-block; width:16px; height:16px; border-radius:5px; border:1.5px solid var(--line); opacity:.4;"></span><% end %>
+              </td>
+              <td class="mono" style="font-size:11.5px; color:var(--ink-2); word-break:break-all; max-width:340px;"><%= i.chave %></td>
+              <td><span class="pill <%= meta[1] %>"><span class="dot"></span><%= meta[0] %></span></td>
+              <td><span class="mono" style="font-size:12px; font-weight:600;"><%= code %></span> <span style="color:var(--ink-2); font-size:12px;"><%= i.error if i.error.present? %></span></td>
+              <td class="mono" style="font-size:11.5px; color:var(--ink-3); white-space:nowrap;"><%= i.n_prot || "—" %></td>
+              <td style="text-align:right;">
+                <% if i.status == "downloaded" %>
+                  <%= link_to "↓ XML", xml_lote_path(@lote, chave: i.chave), class: "btn btn-ghost mono", style: "padding:5px 11px; font-size:11.5px;" %>
+                <% else %><span style="color:var(--ink-3);">—</span><% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+  <div style="margin-top:14px; font-size:11.5px; color:var(--ink-3);"><span class="mono" style="color:var(--st-norec-fg);">632</span> Fora do prazo · <span class="mono" style="color:var(--st-norec-fg);">640</span> Sem vínculo · <span class="mono" style="color:var(--st-error-fg);">656</span> Consumo indevido</div>
+</div>
+
+<%# ===== MODAL DE STEP-UP — CONSCIENTE DE AMBIENTE ===== %>
+<% if pendentes.positive? %>
+  <div id="stepup-modal" style="display:none; position:fixed; inset:0; background:rgba(15,17,20,.55); backdrop-filter:blur(2px); align-items:center; justify-content:center; z-index:50; padding:24px;">
+    <div class="panel" style="width:100%; max-width:452px; box-shadow:var(--shadow-lg); overflow:hidden; animation:ov-rise .18s cubic-bezier(.2,.7,.3,1);">
+      <div style="height:4px; background:<%= prod ? 'var(--danger)' : 'var(--warn)' %>;"></div>
+      <div style="padding:24px 26px 22px;">
+        <div style="display:flex; align-items:center; gap:11px; margin-bottom:16px;">
+          <div style="width:34px; height:34px; border-radius:9px; background:<%= prod ? 'var(--danger-bg)' : 'var(--st-pending-bg)' %>; color:<%= prod ? 'var(--danger)' : 'var(--warn)' %>; display:flex; align-items:center; justify-content:center; font-size:17px;"><%= prod ? "⚠" : "🧪" %></div>
+          <div>
+            <div style="font-weight:600; font-size:16px;">Confirmar operação</div>
+            <% if prod %>
+              <div style="font-size:12px; color:var(--danger); font-weight:600; letter-spacing:.03em;">PRODUÇÃO · ESCRITA FISCAL IRREVERSÍVEL</div>
+            <% else %>
+              <div style="font-size:12px; color:var(--warn); font-weight:600; letter-spacing:.03em;">HOMOLOGAÇÃO · ENSAIO</div>
+            <% end %>
+          </div>
+        </div>
+        <div style="font-size:13.5px; line-height:1.6; color:var(--ink); background:var(--panel-2); border:1px solid <%= prod ? 'var(--danger-line)' : 'var(--line)' %>; border-radius:9px; padding:14px 15px; margin-bottom:18px;">
+          <% if prod %>
+            Você está em <strong style="color:var(--danger);">PRODUÇÃO</strong>. Vai confirmar <strong class="mono"><%= pendentes %> notas</strong> da empresa <strong><%= @lote.certificado.rotulo %></strong> <span class="mono" style="color:var(--ink-2);">(<%= @lote.cnpj %>)</span>. A Confirmação da Operação é um evento assinado, registrado na SEFAZ e <strong style="color:var(--danger);">não pode ser desfeita</strong>.
+          <% else %>
+            <strong style="color:var(--warn);">Ensaio em HOMOLOGAÇÃO</strong> — nenhuma escrita fiscal real. As <strong class="mono"><%= pendentes %> notas</strong> de <strong><%= @lote.certificado.rotulo %></strong> serão enviadas ao ambiente de teste (tpAmb=2). Nada é registrado em produção.
+          <% end %>
+        </div>
+        <%= form_with url: confirmar_lote_path(@lote), method: :post, local: true do %>
+          <label class="label">Reinsira a passphrase-mestra para prosseguir</label>
+          <%= password_field_tag :passphrase, nil, autocomplete: "off", placeholder: "••••••••••", class: "field", style: "margin-bottom:6px;", data: { su_field: true } %>
+          <div style="font-size:11px; color:var(--ink-3); margin-bottom:20px;">Vai ao servidor por request, validade curta. <strong>Não é armazenada no navegador.</strong></div>
+          <div style="display:flex; gap:10px;">
+            <button type="button" class="btn btn-ghost" style="padding:12px 18px;" data-action="close-modal">Cancelar</button>
+            <button type="submit" class="btn <%= prod ? 'btn-danger' : 'btn-primary' %>" style="flex:1; padding:12px;">Confirmar <%= pendentes %> notas<%= " (ensaio)" unless prod %></button>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>

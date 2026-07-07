@@ -1,0 +1,23 @@
+# Dev/local do app Rails de registro (Fase 4 parte 1).
+FROM ruby:3.3-slim-bookworm
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential git pkg-config libyaml-dev libpq-dev \
+        openssl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /rails
+
+# Intermediário faltante da cadeia TLS do www (RecepcaoEvento/Confirmação, Let's Encrypt),
+# ancorado no ISRG Root X1 já confiável — habilita verify=ON sem contornar a verificação.
+COPY ca/ /usr/local/share/ca-certificates/sefaz/
+RUN update-ca-certificates
+
+COPY Gemfile Gemfile.lock ./
+RUN bundle install
+
+COPY . .
+
+ENV RAILS_ENV=development
+EXPOSE 3000
+CMD ["bash", "-lc", "bundle exec rails server -b 0.0.0.0 -p 3000"]

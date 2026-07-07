@@ -1,0 +1,43 @@
+<% content_for :title, "Novo lote" %>
+<div style="display:grid; grid-template-columns:1fr 340px; gap:22px; align-items:start;" data-chips-root>
+  <%= form_with url: lotes_path, method: :post, id: "lote-form" do |f| %>
+    <div class="panel" style="padding:22px 24px;">
+      <% if @rejeitadas.present? %>
+        <div class="flash alert">Rejeitadas: <%= @rejeitadas.map { |r| (r[:chave]||r["chave"]).to_s[0,10] + '… ' + (r[:motivo]||r["motivo"]) }.join(" · ") %></div>
+      <% end %>
+      <label class="label">Empresa (certificado)</label>
+      <select name="certificado_id" class="field" style="margin-bottom:20px; cursor:pointer;">
+        <% @certificados.each do |c| %>
+          <option value="<%= c.id %>" <%= "selected" if @certificado&.id == c.id %>><%= c.rotulo %> — <%= c.cnpj %></option>
+        <% end %>
+      </select>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:7px;">
+        <label class="label" style="margin:0;">Chaves de acesso <span style="color:var(--ink-3); font-weight:400;">— cole a lista, uma por linha</span></label>
+        <button type="button" data-action="chips-clear" style="background:transparent; border:none; color:var(--accent); font-size:11.5px; cursor:pointer;">Limpar</button>
+      </div>
+      <div id="chips-box" style="min-height:186px; max-height:260px; overflow:auto; background:var(--field); border:1px solid var(--field-line); border-radius:8px; padding:11px; display:flex; flex-wrap:wrap; gap:7px; align-content:flex-start; cursor:text;">
+        <div id="chips-placeholder" class="mono" style="color:var(--ink-3); font-size:12.5px;">Cole aqui as chaves de 44 dígitos…</div>
+        <input id="chip-input" spellcheck="false" class="mono" style="flex:1; min-width:120px; border:none; background:transparent; outline:none; font-size:12px; color:var(--ink); padding:4px 2px;" />
+      </div>
+      <input type="hidden" name="chaves" id="chaves-field" />
+      <div style="font-size:11.5px; color:var(--ink-3); margin-top:8px;">Validação local (instantânea) antes de tocar a SEFAZ: 44 dígitos, dígito verificador (módulo 11) e deduplicação. <strong>O servidor revalida no envio</strong> — o cliente nunca é autoritativo.</div>
+
+      <%= f.submit "Criar lote", class: "btn btn-primary", style: "margin-top:18px; width:100%; padding:12px;" %>
+    </div>
+  <% end %>
+
+  <div style="display:flex; flex-direction:column; gap:16px;">
+    <div class="panel" style="overflow:hidden;">
+      <div style="display:flex; border-bottom:1px solid var(--line);">
+        <div style="flex:1; padding:15px 16px; text-align:center; border-right:1px solid var(--line);"><div class="mono" id="cnt-validas" style="font-size:24px; font-weight:600; color:var(--ok);">0</div><div style="font-size:11px; text-transform:uppercase; color:var(--ink-3);">Válidas</div></div>
+        <div style="flex:1; padding:15px 16px; text-align:center;"><div class="mono" id="cnt-rejeitadas" style="font-size:24px; font-weight:600; color:var(--ink-3);">0</div><div style="font-size:11px; text-transform:uppercase; color:var(--ink-3);">Rejeitadas</div></div>
+      </div>
+      <div style="padding:12px 16px; font-size:11.5px; color:var(--ink-3);">Balões vermelhos são chaves rejeitadas e não entram no lote. Remova pelo ✕.</div>
+    </div>
+    <div class="panel" style="padding:16px;">
+      <div style="font-size:11px; text-transform:uppercase; color:var(--ink-3); margin-bottom:8px;">Após criar o lote</div>
+      <div style="font-size:12.5px; color:var(--ink-2); line-height:1.5;">No relatório do lote você escolhe: <strong>Baixar</strong> (só notas já confirmadas, sem escrita fiscal) ou <strong>Confirmar e baixar</strong> (escrita fiscal, com step-up e aviso de ambiente).</div>
+    </div>
+  </div>
+</div>
