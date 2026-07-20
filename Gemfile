@@ -10,7 +10,7 @@ gem "pg", "~> 1.5"
 gem "puma", ">= 5.0"
 
 # Background job single-worker, DB-backed (sem Redis)
-gem "good_job", "~> 4.0"
+gem "good_job", "~> 4.19"
 
 # Fundação SEFAZ (XML/SOAP + mTLS) reaproveitada da Fase 3
 gem "nokogiri", "~> 1.16"
