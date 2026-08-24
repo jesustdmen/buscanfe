@@ -282,7 +282,7 @@ GEM
       rubocop-performance (>= 1.24)
       rubocop-rails (>= 2.30)
     ruby-progressbar (1.13.0)
-    rubyzip (2.4.1)
+    rubyzip (3.5.0)
     securerandom (0.4.1)
     sprockets (4.2.2)
       concurrent-ruby (~> 1.0)
@@ -340,7 +340,7 @@ DEPENDENCIES
   rack-attack
   rails (~> 7.2.3, >= 7.2.3.1)
   rubocop-rails-omakase
-  rubyzip (~> 2.3)
+  rubyzip (~> 3.5)
   sprockets-rails
   tzinfo-data
   web-console
