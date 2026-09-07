@@ -18,7 +18,7 @@ gem "faraday", "~> 2.9"
 gem "faraday-net_http", "~> 3.1"
 
 # Empacotar XMLs selecionados em .zip (download em lote)
-gem "rubyzip", "~> 2.3", require: "zip"
+gem "rubyzip", "~> 3.6", require: "zip"
 
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"
