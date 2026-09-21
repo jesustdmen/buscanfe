@@ -14,7 +14,7 @@ gem "good_job", "~> 4.0"
 
 # Fundação SEFAZ (XML/SOAP + mTLS) reaproveitada da Fase 3
 gem "nokogiri", "~> 1.16"
-gem "faraday", "~> 2.9"
+gem "faraday", "~> 2.14"
 gem "faraday-net_http", "~> 3.1"
 
 # Empacotar XMLs selecionados em .zip (download em lote)
